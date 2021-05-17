@@ -150,15 +150,17 @@ public class CPU {
     }
 
     public void load(String filename) {
-        int address = 0;
         try {
+            int address = 0;
             File program = new File(filename);
+
             Scanner reader = new Scanner(program);
             Pattern pattern = Pattern.compile("[0-1]{8}");
+
             while (reader.hasNextLine()) {
                 String[] data = reader.nextLine().trim().split("\\s+");
                 Matcher matcher = pattern.matcher(data[0]);
-                System.out.println(data[0]);
+
                 if (matcher.matches()) {
                     System.out.println(data[0]);
                     this.ram_write(Integer.parseInt(data[0]), address);
@@ -169,5 +171,35 @@ public class CPU {
             System.out.println("Error loading program.");
             e.printStackTrace();
         }
+    }
+
+    public void trace() {
+        String out = String.format(
+                "TRACE: PC: %02X | RAM@PC: %02X, RAM@PC+1: %02X, RAM@PC+2: %02X",
+                this.PC,
+                this.ram_read(this.PC),
+                this.ram_read(this.PC+1),
+                this.ram_read(this.PC+2)
+        );
+        System.out.println(out);
+    }
+
+    private int[] decode_instruction(int instruction) {
+        private final int MOV_PC_MASK = 0b11;
+        private final int FIRST_BIT_MASK = 0b1;
+        private final int INSTRUCTION_IDENTIFIER_MASK = 0b1111;
+
+        int mov_pc = ((instruction >> 6) & MOV_PC_MASK) + 1;
+        int is_alu = (instruction >> 5) & FIRST_BIT_MASK;
+        int sets_pc = (instruction >> 4) & FIRST_BIT_MASK;
+        int instruction_identifier = instruction & INSTRUCTION_IDENTIFIER_MASK;
+
+        int[] out = new int[4];
+        out[0] = mov_pc;
+        out[1] = is_alu;
+        out[2] = sets_pc;
+        out[3] = instruction_identifier;
+
+        return out;
     }
 }
